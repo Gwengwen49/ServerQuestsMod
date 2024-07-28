@@ -24,6 +24,8 @@ public class QuestHandler {
         this.questProgression = 0;
         this.playerLevel = 0;
         this.rewardOnRespawn = false;
+
+        
     }
 
     public void completeQuest() {
@@ -50,7 +52,10 @@ public class QuestHandler {
                 ++this.questProgression;
                 ServerQuestsMod.logQuestProgress(this.player);
                 if (this.questProgression >= this.quest.action().getCount()) {
-                    this.completeQuest();
+                    if(type == ActionType.DIE) {
+
+                    }
+                    else this.completeQuest();
                 }
                 return true;
             }

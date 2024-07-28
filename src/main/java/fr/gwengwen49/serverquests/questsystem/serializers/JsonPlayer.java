@@ -3,7 +3,7 @@ package fr.gwengwen49.serverquests.questsystem.serializers;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
-public class JsonPlayer implements JsonElement<ServerPlayerEntity> {
+public class JsonPlayer(Uuid uuid) implements JsonElement<ServerPlayerEntity> {
 
 
     @Override
