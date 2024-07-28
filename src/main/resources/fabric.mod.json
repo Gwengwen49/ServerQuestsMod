@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "serverquests",
+  "version": "${version}",
+
+  "name": "ServerQuestsMod",
+  "description": "",
+  "authors": [],
+  "contact": {},
+
+  "license": "All-Rights-Reserved",
+  "icon": "assets/serverquests/icon.png",
+
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+        "fr.gwengwen49.serverquests.ServerQuestsMod"
+    ]
+  },
+
+      "mixins": [
+        "serverquests.mixins.json"
+      ],
+
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+        "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  },
+  "custom": {
+  		"loom:injected_interfaces": {
+  		    "net/minecraft/class_3222": [
+  		    "fr/gwengwen49/serverquests/QuestUser"
+  		    ]
+        }
+  	}
+
+}
