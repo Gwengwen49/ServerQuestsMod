@@ -3,7 +3,10 @@ package fr.gwengwen49.serverquests.questsystem;
 import fr.gwengwen49.serverquests.QuestUser;
 import fr.gwengwen49.serverquests.ServerQuestsMod;
 import fr.gwengwen49.serverquests.questsystem.serializers.DataHolder;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.slf4j.Marker;
@@ -24,15 +27,16 @@ public class QuestHandler {
         this.questProgression = 0;
         this.playerLevel = 0;
         this.rewardOnRespawn = false;
-
         
     }
 
     public void completeQuest() {
-        ServerQuestsMod.getLogger().info("{} has completed the quest \"{}\" !", this.player.getName(), this.quest.displayName());
-        this.quest.rewards().forEach(this::applyReward);
-        ++playerLevel;
-        this.resetQuest();
+        if(this.player != null && this.quest != null) {
+            ServerQuestsMod.getLogger().info("{} has completed the quest \"{}\" !", this.player.getName().getString(), this.quest.displayName());
+            this.quest.rewards().forEach(this::applyReward);
+            ++playerLevel;
+            this.resetQuest();
+        }
     }
 
     public void update() {
@@ -53,14 +57,24 @@ public class QuestHandler {
                 ServerQuestsMod.logQuestProgress(this.player);
                 if (this.questProgression >= this.quest.action().getCount()) {
                     if(type == ActionType.DIE) {
-
+                        this.rewardOnRespawn = true;
                     }
-                    else this.completeQuest();
+                    else {
+                        this.completeQuest();
+                        this.rewardOnRespawn = false;
+                    }
                 }
                 return true;
             }
         }
         return false;
+    }
+
+    public void rewardOnRespawn() {
+        if(this.rewardOnRespawn) {
+            this.completeQuest();
+        }
+        this.rewardOnRespawn = false;
     }
 
     public List<Quest> getAvailableQuests() {
@@ -105,6 +119,7 @@ public class QuestHandler {
     public void resetQuest() {
         this.quest = null;
         this.questProgression = 0;
+        this.rewardOnRespawn = false;
     }
 
     public void reset() {
@@ -135,20 +150,31 @@ public class QuestHandler {
     }
 
     public void writeNbt(NbtCompound nbt) {
-        nbt.putString("quest_id", this.quest.id());
-        nbt.putInt("quest_progression", this.questProgression);
+        NbtCompound questNbt = new NbtCompound();
+        questNbt.putInt("player_level", this.playerLevel);
+        if(quest != null) {
+            questNbt.putString("quest_id", this.quest.id());
+            questNbt.putInt("quest_progression", this.questProgression);
+            questNbt.putBoolean("reward_on_respawn", this.rewardOnRespawn);
+        }
+        nbt.put("quest_system", questNbt);
     }
 
     public void readNbt(NbtCompound nbt) {
-        this.quest = QuestLoader.getQuestFromName(nbt.getString("quest_id"));
-        this.questProgression = nbt.getInt("quest_progression");
-        this.playerLevel = nbt.getInt("player_level");
+        NbtCompound questNbt = nbt.getCompound("quest_system");
+        this.playerLevel = questNbt.getInt("player_level");
+        if(questNbt.contains("quest_id")) {
+            this.quest = QuestLoader.getQuestFromName(questNbt.getString("quest_id"));
+            this.questProgression = questNbt.getInt("quest_progression");
+            this.rewardOnRespawn = questNbt.getBoolean("reward_on_respawn");
+        }
     }
 
     public void copyFrom(QuestHandler oldHandler) {
         this.quest = oldHandler.quest;
         this.questProgression = oldHandler.questProgression;
         this.playerLevel = oldHandler.playerLevel;
+        this.rewardOnRespawn = oldHandler.rewardOnRespawn;
     }
 
 

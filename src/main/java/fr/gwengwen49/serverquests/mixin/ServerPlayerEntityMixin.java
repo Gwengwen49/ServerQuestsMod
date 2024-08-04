@@ -7,6 +7,9 @@ import fr.gwengwen49.serverquests.gui.QuestGui;
 import fr.gwengwen49.serverquests.questsystem.ActionType;
 import fr.gwengwen49.serverquests.questsystem.QuestHandler;
 import fr.gwengwen49.serverquests.questsystem.serializers.DataHolder;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.NbtCompound;
@@ -26,7 +29,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity implements QuestUser {
+public abstract class ServerPlayerEntityMixin
+        extends PlayerEntity implements QuestUser {
 
     @Unique
     private final QuestHandler questHandler = new QuestHandler((ServerPlayerEntity)(Object)this);
@@ -51,10 +55,18 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Qu
     }
 
     @Inject(at = @At(value = "TAIL"), method = "tick")
-    public void hookQuestActions(CallbackInfo ci) {
-        if(!this.isImmobile()) {
-            this.questHandler.tryProgress(ActionType.MOVE, new DataHolder());
-        }
+    public void onTick(CallbackInfo ci) {
+        this.questHandler.tryProgress(ActionType.NO_ACTION, new DataHolder());
+    }
+
+    @Inject(at = @At("TAIL"), method = "onDeath")
+    public void onDeath(DamageSource damageSource, CallbackInfo ci) {
+        this.questHandler.tryProgress(ActionType.DIE, new DataHolder().add(DataHolder.DEATH_SOURCE,  damageSource.getType().msgId()));
+    }
+
+    @Inject(at = @At("TAIL"), method = "sleep")
+    public void onSleep(BlockPos pos, CallbackInfo ci) {
+        this.questHandler.tryProgress(ActionType.SLEEP, new DataHolder());
     }
 
     @Override

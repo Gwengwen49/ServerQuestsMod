@@ -3,7 +3,6 @@ package fr.gwengwen49.serverquests.gui;
 import fr.gwengwen49.serverquests.QuestUser;
 import fr.gwengwen49.serverquests.questsystem.Quest;
 import fr.gwengwen49.serverquests.questsystem.QuestLoader;
-import net.minecraft.block.MushroomPlantBlock;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
@@ -17,9 +16,8 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.spawner.PatrolSpawner;
+import net.minecraft.text.Text;
 
 public class QuestGui extends ScreenHandler {
 
@@ -46,13 +44,17 @@ public class QuestGui extends ScreenHandler {
             this.initialize(serverWorld);
     }
 
-    public QuestGui initialize(ServerWorld world) {
+
+    public void initialize(ServerWorld world) {
         if(this.playerInventory.player instanceof QuestUser questUser) {
             for (int i = 0; i < questUser.getQuestHandler().getAvailableQuests().size(); i++) {
                 Quest quest = questUser.getQuestHandler().getAvailableQuests().get(i);
                 NbtCompound id = new NbtCompound();
                 id.putString("quest_id", quest.id());
                 ItemStack questIcon = quest.menuItem().convert(world);
+                if(questIcon.get(DataComponentTypes.CUSTOM_NAME) == null) {
+                    questIcon.set(DataComponentTypes.CUSTOM_NAME, Text.of(quest.displayName()));
+                }
                 if(questIcon == ItemStack.EMPTY) questIcon = Items.STONE.getDefaultStack();
                 questIcon.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(id));
                 if(i >= 9*6) {
@@ -63,7 +65,6 @@ public class QuestGui extends ScreenHandler {
                 this.sendContentUpdates();
             }
         }
-        return this;
     }
 
     @Override

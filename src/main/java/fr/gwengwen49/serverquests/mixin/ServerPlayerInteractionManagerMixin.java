@@ -23,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.xml.crypto.Data;
+
 @Mixin(ServerPlayerInteractionManager.class)
 public abstract class ServerPlayerInteractionManagerMixin {
 
@@ -35,8 +37,8 @@ public abstract class ServerPlayerInteractionManagerMixin {
             user.getQuestHandler().tryProgress(
                     ActionType.BREAK_BLOCK,
                     new DataHolder()
-                            .add("blockPos", pos)
-                            .add("targetBlock", block)
+                            .add(DataHolder.BLOCKPOS, pos)
+                            .add(DataHolder.BLOCK, block)
             );
         }
     }
@@ -45,11 +47,11 @@ public abstract class ServerPlayerInteractionManagerMixin {
     public void onUseItem(ServerPlayerEntity player, World world, ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         if(this.player instanceof QuestUser user) {
             DataHolder holder = new DataHolder();
-            holder.add("itemStack", stack);
+            holder.add(DataHolder.ITEM, stack);
             HitResult hitResult = player.raycast(player.getBlockInteractionRange(), 0.0F, true);
             if(hitResult instanceof BlockHitResult blockHitResult) {
-                holder.add("targetPos", blockHitResult.getBlockPos());
-                holder.add("targetBlock", world.getBlockState(blockHitResult.getBlockPos()).getBlock());
+                holder.add(DataHolder.BLOCKPOS, blockHitResult.getBlockPos());
+                holder.add(DataHolder.BLOCK, world.getBlockState(blockHitResult.getBlockPos()).getBlock());
             }
             user.getQuestHandler().tryProgress(ActionType.USE_ITEM, holder);
         }
